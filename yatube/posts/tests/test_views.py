@@ -310,8 +310,6 @@ class PaginatorTest(TestCase):
                 self.assertEqual(len(response.context['page_obj']),
                                  self.SECOND_PAGE_AMOUNT)
 
-
-class ViewTestClass(TestCase):
     def test_page_not_found(self):
         response = self.client.get('/nonexist-page/')
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
