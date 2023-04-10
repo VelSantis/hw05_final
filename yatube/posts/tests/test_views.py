@@ -241,9 +241,10 @@ class PostURLTests(TestCase):
         ).content)
 
     def test_follow_page(self):
-        """Проверяем, что страница подписок пуста."""
-        """Проверка подписки на автора поста."""
-        """Проверка подписки у юзера-фоловера."""
+        """Проверяем, что страница подписок пуста.
+        Проверка подписки на автора поста.
+        Проверка подписки у юзера-фоловера.
+        """
         response = self.authorized_client.get(reverse("posts:follow_index"))
         self.assertEqual(len(response.context["page_obj"]), 0)
         Follow.objects.get_or_create(user=self.user, author=self.post.author)
