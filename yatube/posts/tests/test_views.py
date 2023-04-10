@@ -30,6 +30,11 @@ class PostURLTests(TestCase):
             group=cls.group,
             text='Пост номер 1'
         )
+        cls.url_names = [
+            reverse('posts:index'),
+            reverse('posts:group_list', kwargs={'slug': f'{cls.group.slug}'}),
+            reverse('posts:profile', kwargs={'username': f'{cls.user}'})
+        ]
 
     def setUp(self):
         self.guest_client = Client()
