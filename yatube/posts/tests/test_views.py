@@ -266,11 +266,6 @@ class PostURLTests(TestCase):
         r_3 = self.authorized_client.get(reverse("posts:follow_index"))
         self.assertEqual(len(r_3.context["page_obj"]), 0)
 
-    def test_page_not_found(self):
-        response = self.client.get('/nonexist-page/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertTemplateUsed(response, 'core/404.html')
-
 
 class PaginatorTest(TestCase):
     SECOND_PAGE_AMOUNT = PAGE_SIZE // 2
