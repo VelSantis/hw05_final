@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-
 from django.db import models
 
 
@@ -57,7 +56,7 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments_of_author',
+        related_name='comments',
         verbose_name='Автор комментария'
     )
     text = models.TextField(
@@ -67,6 +66,9 @@ class Comment(models.Model):
     created = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True)
+
+    class Meta:
+        ordering = ['-post']
 
 
 class Follow(models.Model):

@@ -6,4 +6,8 @@ def page_not_found(request, exception):
 
 
 def csrf_failure(request, exception):
-    return render(request, "core/403csrf.html")
+    return render(request, "core/csrf.html")
+
+
+def permission_denied(request, exception):
+    return render(request, "core/403.html", {"path": request.path}, status=403)

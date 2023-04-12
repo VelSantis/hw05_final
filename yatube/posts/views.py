@@ -8,6 +8,7 @@ from .utils import get_page_obj
 
 
 def index(request):
+    """Все посты от всех пользователей."""
     post_list = Post.objects.all()
     page_obj = get_page_obj(request, post_list)
     context = {
@@ -17,6 +18,7 @@ def index(request):
 
 
 def group_posts(request, slug):
+    """Посты по группам."""
     group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.all()
     page_obj = get_page_obj(request, post_list)
@@ -28,6 +30,7 @@ def group_posts(request, slug):
 
 
 def profile(request, username):
+    """Профиль пользователя."""
     author = get_object_or_404(User, username=username)
     posts = Post.objects.filter(author=author)
     page_obj = get_page_obj(request, posts)
@@ -44,6 +47,7 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
+    """Детальное отображение поста."""
     post = Post.objects.get(id=post_id)
     form_comment = CommentForm()
     comments_post = post.comments.all()
@@ -57,6 +61,7 @@ def post_detail(request, post_id):
 
 @login_required
 def post_create(request):
+    """Создание поста."""
     form = PostForm(request.POST or None, files=request.FILES or None)
     if not form.is_valid():
         return render(request, 'posts/create_post.html',
@@ -69,6 +74,7 @@ def post_create(request):
 
 @login_required
 def post_edit(request, post_id):
+    """Редактирование поста."""
     post = get_object_or_404(Post, pk=post_id)
     if post.author != request.user:
         return redirect(reverse('posts:post_detail',
@@ -86,6 +92,7 @@ def post_edit(request, post_id):
 
 @login_required
 def add_comment(request, post_id):
+    """Добавление комментария."""
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
@@ -99,10 +106,7 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     """Вывести посты авторов, на которых подписан пользователь."""
-    follower = Follow.objects.filter(user=request.user).values_list(
-        "author_id", flat=True
-    )
-    posts = Post.objects.filter(author_id__in=follower)
+    posts = Post.objects.filter(author__following__user=request.user)
     page_obj = get_page_obj(request, posts)
     context = {
         "page_obj": page_obj,
@@ -126,5 +130,5 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     """Отписаться от автора."""
     author = get_object_or_404(User, username=username)
-    Follow.objects.get(user=request.user, author=author).delete()
+    Follow.objects.filter(user=request.user, author=author).delete()
     return redirect("posts:follow_index")

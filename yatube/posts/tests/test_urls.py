@@ -34,6 +34,7 @@ class PostURLTests(TestCase):
         cls.private_urls = {
             '/create/': 'posts/create_post.html',
             f'/posts/{cls.post.id}/edit/': 'posts/create_post.html',
+            'follow/': 'posts/follow.html',
         }
         cls.all_urls = {
             **cls.public_urls, **cls.private_urls

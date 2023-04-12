@@ -4,13 +4,13 @@
 
 {% block content %}
 
-{% load cache %}
-  {% cache 20 index_page whith page_obj %}
-  {% include 'includes/switcher.html' %}
-    {% for post in page_obj %}
-      {% include 'includes/post_card.html' %} 
-      {% if not forloop.last %}<hr>{% endif %}
-    {% endfor %}
-  {% include 'includes/paginator.html' %}
+  {% load cache %}
+    {% cache 20 index_page page_obj.number %}
+    {% include 'includes/switcher.html' %}
+      {% for post in page_obj %}
+        {% include 'includes/post_card.html' %} 
+        {% if not forloop.last %}<hr>{% endif %}
+      {% endfor %}
+    {% include 'includes/paginator.html' %}
   {% endcache %}
 {% endblock %}
