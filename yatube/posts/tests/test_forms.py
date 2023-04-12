@@ -202,7 +202,7 @@ class CommentFormTests(TestCase):
             'post': self.post.pk,
             'author': self.user.pk
         }
-        url = reverse('posts:add_comment', kwargs={"post_id":self.post.pk})
+        url = reverse('posts:add_comment', kwargs={"post_id": self.post.pk})
         self.authorized_client.post(
             url,
             data=form_data,
@@ -227,14 +227,14 @@ class CommentFormTests(TestCase):
             'post': self.post.pk,
             'author': self.user.pk
         }
-        url = reverse('posts:add_comment', kwargs={"post_id":self.post.pk})
+        url = reverse('posts:add_comment', kwargs={"post_id": self.post.pk})
         response = self.guest_client.post(
             url,
             data=form_data,
             follow=True
         )
         self.assertRedirects(
-            response, reverse("users:login") + "?next=" + url 
+            response, reverse("users:login") + "?next=" + url
         )
         self.assertEqual(
             Comment.objects.filter(post=self.post).count(),
