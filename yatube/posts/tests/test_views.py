@@ -233,8 +233,8 @@ class FollowTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='Rocket Racoon')
-        cls.author = User.objects.create_user(username='Tanos')
+        cls.user = User.objects.create(username='Rocket Racoon')
+        cls.author = User.objects.create(username='Tanos')
         cls.guest_client = Client()
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
