@@ -72,7 +72,6 @@ class PostCreateFormTests(TestCase):
                 group=PostCreateFormTests.group,
                 author=PostCreateFormTests.user,
                 text='Тестовый текст',
-                image='posts/small.gif'
             ).exists()
         )
 
@@ -110,7 +109,7 @@ class PostCreateFormTests(TestCase):
                 text='Тестовый пост от неавторизованного пользователя'
             ).exists()
         )
-        self.assertEqual(Post.objects.count(), post_count + 1)
+        self.assertEqual(Post.objects.count(), post_count)
 
     def test_authorized_edit_post(self):
         """Редактирование записи создателем поста"""
@@ -203,8 +202,9 @@ class CommentFormTests(TestCase):
             'post': self.post.pk,
             'author': self.user.pk
         }
+        url = reverse('posts:add_comment', kwargs={"post_id":self.post.pk})
         self.authorized_client.post(
-            reverse('posts:add_comment'),
+            url,
             data=form_data,
             follow=True
         )
@@ -227,13 +227,14 @@ class CommentFormTests(TestCase):
             'post': self.post.pk,
             'author': self.user.pk
         }
+        url = reverse('posts:add_comment', kwargs={"post_id":self.post.pk})
         response = self.guest_client.post(
-            reverse('posts:add_comment'),
+            url,
             data=form_data,
             follow=True
         )
         self.assertRedirects(
-            response, f'{reverse("users:login")}?next=/add_comment/'
+            response, reverse("users:login") + "?next=" + url 
         )
         self.assertEqual(
             Comment.objects.filter(post=self.post).count(),

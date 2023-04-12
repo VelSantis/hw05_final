@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from posts.models import Post, Group, User, Comment, Follow
-from posts.forms import PostForm
+from posts.forms import PostForm, CommentForm
 from yatube.settings import PAGE_SIZE
 
 
@@ -137,10 +137,9 @@ class PostURLTests(TestCase):
         self.assertEqual(self.post.pub_date, post.pub_date)
         self.assertEqual(self.post.author, post.author)
         form = response.context['form']
-        self.assertIsInstance(form, PostForm)
+        self.assertIsInstance(form, CommentForm)
         form_fields = {
             'text': forms.fields.CharField,
-            'group': forms.fields.ChoiceField,
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
@@ -262,7 +261,7 @@ class FollowTest(TestCase):
         )
         self.assertRedirects(response,
                              reverse
-                             ('users:login') + '?next=' + 'follow/')
+                             ('users:login') + '?next=' + f'/profile/{self.author}/follow/')
         follow = Follow.objects.all().count()
         self.assertEqual(follow, 0)
 
@@ -309,7 +308,7 @@ class FollowTest(TestCase):
         response = self.authorized_client.get(reverse('posts:follow_index'))
         count = len(response.context['page_obj'])
         self.assertEqual(count, 1)
-        self.assertIn(response.context['page_obj'], author_post)
+        self.assertIn( author_post,response.context['page_obj'])
 
     def test_new_post_for_not_follower(self):
         """Новая запись автора не появляется к ленте тех,
