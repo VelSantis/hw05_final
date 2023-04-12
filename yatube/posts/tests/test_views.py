@@ -2,6 +2,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from posts.models import Post, Group, User, Comment, Follow
 from posts.forms import PostForm
@@ -31,11 +32,16 @@ class PostURLTests(TestCase):
             b'\x02\x00\x01\x00\x00\x02\x02\x0C'
             b'\x0A\x00\x3B'
         )
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
         cls.post = Post.objects.create(
             author=cls.user,
             group=cls.group,
             text='Пост номер 1',
-            image=small_gif
+            image=uploaded
         )
         cls.comment = Comment.objects.create(
             author=cls.user, post=cls.post, text='Комментарий 1'
