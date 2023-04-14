@@ -27,15 +27,14 @@ class PostCreateFormTests(TestCase):
             group=cls.group
         )
 
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
-
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+
+    def tearDown(self):
+        super().tearDown()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def test_create_post(self):
         """Валидная форма создает запись"""
@@ -69,9 +68,9 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
-                group=PostCreateFormTests.group,
-                author=PostCreateFormTests.user,
-                text='Тестовый текст',
+                group=self.group,
+                author=self.user,
+                text=form_data["text"],
                 image=Post.image.field.upload_to + form_data['image'].name,
             ).exists()
         )
