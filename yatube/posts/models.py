@@ -63,7 +63,7 @@ class Comment(models.Model):
         'Текст комментария',
         help_text='Введите текст комментария'
     )
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True)
 

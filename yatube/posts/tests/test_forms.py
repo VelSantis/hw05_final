@@ -72,6 +72,7 @@ class PostCreateFormTests(TestCase):
                 group=PostCreateFormTests.group,
                 author=PostCreateFormTests.user,
                 text='Тестовый текст',
+                image = Post.image.field.upload_to + form_data['image'].name,
             ).exists()
         )
 
@@ -143,11 +144,14 @@ class PostCreateFormTests(TestCase):
             kwargs={'post_id': self.post.id},
         ))
         self.assertEqual(Post.objects.count(), posts_count)
-        self.post.refresh_from_db()
-        self.assertEqual(self.post, form_data)
-        # self.assertEqual(self.post.group.id, form_data['group'])
-        # self.assertEqual(self.post.author, self.user)
-
+        self.assertTrue(
+            Post.objects.filter(
+                text=form_data["text"], 
+                group_id = form_data['group'],
+                author = self.user,
+                image = Post.image.field.upload_to + form_data['image'].name
+            ).exists())
+        
 
 class CommentFormTests(TestCase):
     @classmethod
