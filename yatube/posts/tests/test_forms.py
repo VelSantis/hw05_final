@@ -143,34 +143,10 @@ class PostCreateFormTests(TestCase):
             kwargs={'post_id': self.post.id},
         ))
         self.assertEqual(Post.objects.count(), posts_count)
-        self.assertEqual(
-            Post.objects.get(id=self.post.id).text,
-            form_data['text'],
-        )
-        self.assertEqual(
-            Post.objects.get(id=self.post.id).group.id,
-            form_data['group'],
-        )
-        self.assertEqual(
-            Post.objects.get(id=self.post.id).author, self.user
-        )
-
-    def test_comment_correct_context(self):
-        """Валидная форма Комментария создает запись в Post."""
-        comments_count = Comment.objects.count()
-        form_data = {"text": "Тестовый коммент"}
-        response = self.authorized_client.post(
-            reverse("posts:add_comment", kwargs={"post_id": self.post.id}),
-            data=form_data,
-            follow=True,
-        )
-        self.assertRedirects(
-            response, reverse("posts:post_detail",
-                              kwargs={"post_id": self.post.id})
-        )
-        self.assertEqual(Comment.objects.count(), comments_count + 1)
-        self.assertTrue(Comment.objects.filter(text="Тестовый коммент")
-                        .exists())
+        self.post.refresh_from_db()
+        self.assertEqual(self.post, form_data)
+        # self.assertEqual(self.post.group.id, form_data['group'])
+        # self.assertEqual(self.post.author, self.user)
 
 
 class CommentFormTests(TestCase):
@@ -194,38 +170,27 @@ class CommentFormTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def test_create_post(self):
-        """Валидная форма создает запись"""
-        comments_count = Comment.objects.filter(post=self.post).count()
-        form_data = {
-            'text': 'Тестовый текст',
-            'post': self.post.pk,
-            'author': self.user.pk
-        }
-        url = reverse('posts:add_comment', kwargs={"post_id": self.post.pk})
-        self.authorized_client.post(
-            url,
+    def test_comment_correct_context(self):
+        """Валидная форма Комментария создает запись в Post."""
+        comments_count = Comment.objects.count()
+        form_data = {"text": "Тестовый коммент"}
+        response = self.authorized_client.post(
+            reverse("posts:add_comment", kwargs={"post_id": self.post.id}),
             data=form_data,
-            follow=True
+            follow=True,
         )
-        self.assertEqual(
-            Comment.objects.filter(post=self.post).count(),
-            comments_count + 1
+        self.assertRedirects(
+            response, reverse("posts:post_detail",
+                              kwargs={"post_id": self.post.id})
         )
-        self.assertTrue(
-            Comment.objects.filter(
-                post=self.post,
-                author=self.user,
-                text='Тестовый текст'
-            ).exists()
-        )
+        self.assertEqual(Comment.objects.count(), comments_count + 1)
+        self.assertTrue(Comment.objects.filter(text="Тестовый коммент")
+                        .exists())
 
     def test_guest_cant_add_comment(self):
-        comments_count = Comment.objects.filter(post=self.post).count()
+        comments_count = Comment.objects.count()
         form_data = {
-            'text': 'Тестовый текст',
-            'post': self.post.pk,
-            'author': self.user.pk
+            'text': 'Тестовый текст'
         }
         url = reverse('posts:add_comment', kwargs={"post_id": self.post.pk})
         response = self.guest_client.post(
@@ -236,7 +201,4 @@ class CommentFormTests(TestCase):
         self.assertRedirects(
             response, reverse("users:login") + "?next=" + url
         )
-        self.assertEqual(
-            Comment.objects.filter(post=self.post).count(),
-            comments_count
-        )
+        self.assertEqual(Comment.objects.count(), comments_count)

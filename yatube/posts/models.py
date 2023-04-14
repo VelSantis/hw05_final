@@ -68,7 +68,7 @@ class Comment(models.Model):
         auto_now_add=True)
 
     class Meta:
-        ordering = ['-post']
+        ordering = ['-pub_date']
 
 
 class Follow(models.Model):
@@ -86,6 +86,6 @@ class Follow(models.Model):
     )
 
     class Meta:
-        constraints = [models.UniqueConstraint(
-                       fields=['user', 'author'],
-                       name='unique following')]
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'author'],
+                                    name='unique following')]

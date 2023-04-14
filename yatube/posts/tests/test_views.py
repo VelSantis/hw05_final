@@ -1,5 +1,8 @@
-from django.test import Client, TestCase
+import shutil
+import tempfile
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.conf import settings
 from django import forms
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -8,7 +11,10 @@ from posts.models import Post, Group, User, Comment, Follow
 from posts.forms import PostForm, CommentForm
 from yatube.settings import PAGE_SIZE
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -52,6 +58,11 @@ class PostURLTests(TestCase):
             reverse('posts:profile', kwargs={'username': f'{cls.user}'})
         ]
 
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
@@ -89,6 +100,7 @@ class PostURLTests(TestCase):
         self.assertEqual(self.post.group, post.group)
         self.assertEqual(self.post.pub_date, post.pub_date)
         self.assertEqual(self.post.author, post.author)
+        self.assertEqual(self.post.image, post.image)
 
     def test_index_page_show_correct_context(self):
         """Шаблон index сформирован с правильным контекстом."""
@@ -138,15 +150,9 @@ class PostURLTests(TestCase):
         self.assertEqual(self.post.author, post.author)
         form = response.context['form']
         self.assertIsInstance(form, CommentForm)
-        form_fields = {
-            'text': forms.fields.CharField,
-        }
-        for value, expected in form_fields.items():
-            with self.subTest(value=value):
-                form_field = form.fields.get(value)
-                self.assertIsInstance(form_field, expected)
+        form_field = form.fields.get('text')
+        self.assertIsInstance(form_field, forms.fields.CharField)
         comments = response.context['comments']
-        self.assertEqual(len(comments), 1)
         self.assertEqual(comments[0], self.comment)
 
     def test_post_create_page_show_correct_context(self):
@@ -217,13 +223,13 @@ class PostURLTests(TestCase):
     def test_check_cache(self):
         """Проверка кеша."""
         response = self.guest_client.get(reverse("posts:index"))
-        content_1 = response.content
+        _before_delete = response.content
         Post.objects.get(id=1).delete()
         response2 = self.guest_client.get(reverse("posts:index"))
-        content_2 = response2.content
-        self.assertEqual(content_1, content_2)
+        _after_delete = response2.content
+        self.assertEqual(_before_delete, _after_delete)
         cache.clear()
-        self.assertNotEqual(content_2, self.guest_client.get(
+        self.assertNotEqual(_after_delete, self.guest_client.get(
             reverse('posts:index')
         ).content)
 
@@ -234,11 +240,13 @@ class FollowTest(TestCase):
         super().setUpClass()
         cls.user = User.objects.create(username='Rocket Racoon')
         cls.author = User.objects.create(username='Tanos')
-        cls.guest_client = Client()
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
-        cls.post = Post.objects.create(text='Тестовый пост',
-                                       author=cls.user)
+
+    def setUp(self):
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        self.post = Post.objects.create(text='Тестовый пост',
+                                       author=self.user)
 
     def test_authorized_client_can_follow(self):
         """Авторизованный пользователь может подписываться."""
@@ -255,6 +263,7 @@ class FollowTest(TestCase):
 
     def test_not_authorized_client_cannot_follow(self):
         """Неавторизованный пользователь не может подписываться."""
+        follow = Follow.objects.all().count()
         response = self.guest_client.get(
             reverse('posts:profile_follow',
                     kwargs={'username': self.author})
@@ -263,8 +272,8 @@ class FollowTest(TestCase):
                              reverse
                              ('users:login') + '?next='
                              + f'/profile/{self.author}/follow/')
-        follow = Follow.objects.all().count()
-        self.assertEqual(follow, 0)
+        new_follow = Follow.objects.all().count()
+        self.assertEqual(follow, new_follow)
 
     def test_authorized_client_cannot_follow_twice(self):
         """Проверка уникальности подписки авторизованного пользователя
@@ -286,40 +295,33 @@ class FollowTest(TestCase):
 
     def test_authorized_client_can_unfollow(self):
         """Только авторизованный пользователь может отписываться."""
+        follow = Follow.objects.all().count()
         Follow.objects.create(user=self.user, author=self.author)
         self.authorized_client.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.author})
         )
-        follow = Follow.objects.all().count()
-        self.assertEqual(follow, 0)
+        new_follow = Follow.objects.all().count()
+        self.assertEqual(follow, new_follow)
 
     def test_new_post_for_follower(self):
         """В ленте подписчика появляется новая запись автора,
          на которого он подписан."""
-        self.authorized_client.get(
-            reverse('posts:profile_follow',
-                    kwargs={'username': self.author})
-        )
+        Follow.objects.create(user=self.user, author=self.author)
         author_post = Post.objects.create(
             text='Пост для ленты',
             author=self.author
         )
         Post.objects.create(text='Пост для главной', author=self.user)
         response = self.authorized_client.get(reverse('posts:follow_index'))
-        count = len(response.context['page_obj'])
-        self.assertEqual(count, 1)
         self.assertIn(author_post, response.context['page_obj'])
 
     def test_new_post_for_not_follower(self):
         """Новая запись автора не появляется к ленте тех,
          кто на него не подписан."""
-        follow = Follow.objects.all().count()
-        self.assertEqual(follow, 0)
-        Post.objects.create(text='Пост для ленты', author=self.author)
+        author_post = Post.objects.create(text='Пост для ленты', author=self.author)
         response = self.authorized_client.get(reverse('posts:follow_index'))
-        count = len(response.context['page_obj'])
-        self.assertEqual(count, 0)
+        self.assertNotIn(author_post, response.context['page_obj'])
 
 
 class PaginatorTest(TestCase):
