@@ -246,7 +246,7 @@ class FollowTest(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
         self.post = Post.objects.create(text='Тестовый пост',
-                                       author=self.user)
+                                        author=self.user)
 
     def test_authorized_client_can_follow(self):
         """Авторизованный пользователь может подписываться."""
@@ -319,7 +319,9 @@ class FollowTest(TestCase):
     def test_new_post_for_not_follower(self):
         """Новая запись автора не появляется к ленте тех,
          кто на него не подписан."""
-        author_post = Post.objects.create(text='Пост для ленты', author=self.author)
+        author_post = Post.objects.create(
+            text='Пост для ленты',
+            author=self.author)
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertNotIn(author_post, response.context['page_obj'])
 

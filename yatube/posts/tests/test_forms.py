@@ -72,7 +72,7 @@ class PostCreateFormTests(TestCase):
                 group=PostCreateFormTests.group,
                 author=PostCreateFormTests.user,
                 text='Тестовый текст',
-                image = Post.image.field.upload_to + form_data['image'].name,
+                image=Post.image.field.upload_to + form_data['image'].name,
             ).exists()
         )
 
@@ -146,12 +146,12 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertTrue(
             Post.objects.filter(
-                text=form_data["text"], 
-                group_id = form_data['group'],
-                author = self.user,
-                image = Post.image.field.upload_to + form_data['image'].name
+                text=form_data["text"],
+                group_id=form_data['group'],
+                author=self.user,
+                image=Post.image.field.upload_to + form_data['image'].name
             ).exists())
-        
+
 
 class CommentFormTests(TestCase):
     @classmethod
