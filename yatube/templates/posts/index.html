@@ -9,7 +9,7 @@
     {% include 'includes/switcher.html' %}
       {% for post in page_obj %}
         {% include 'includes/post_card.html' %} 
-        {% if not forloop.last %}<hr>{% endif %}
+        {% if not forloop.last %} <hr> {% endif %}
       {% endfor %}
     {% include 'includes/paginator.html' %}
   {% endcache %}

@@ -223,13 +223,13 @@ class PostURLTests(TestCase):
     def test_check_cache(self):
         """Проверка кеша."""
         response = self.guest_client.get(reverse("posts:index"))
-        _before_delete = response.content
+        content_before_delete = response.content
         Post.objects.get(id=1).delete()
         response2 = self.guest_client.get(reverse("posts:index"))
-        _after_delete = response2.content
-        self.assertEqual(_before_delete, _after_delete)
+        content_after_delete = response2.content
+        self.assertEqual(content_before_delete, content_after_delete)
         cache.clear()
-        self.assertNotEqual(_after_delete, self.guest_client.get(
+        self.assertNotEqual(content_after_delete, self.guest_client.get(
             reverse('posts:index')
         ).content)
 
@@ -240,13 +240,13 @@ class FollowTest(TestCase):
         super().setUpClass()
         cls.user = User.objects.create(username='Rocket Racoon')
         cls.author = User.objects.create(username='Tanos')
+        cls.post = Post.objects.create(text='Тестовый пост',
+                                       author=cls.user)
 
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-        self.post = Post.objects.create(text='Тестовый пост',
-                                        author=self.user)
 
     def test_authorized_client_can_follow(self):
         """Авторизованный пользователь может подписываться."""
